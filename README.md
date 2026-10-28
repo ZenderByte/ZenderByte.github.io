@@ -1,2 +1,5 @@
 # ZenderByte.github.io
-The official ZenderByte website!
+## The official ZenderByte website!
+Next Gen Search Interface with Ollama Intelligence, Cloud Models, and Web Access.
+(TRANSFERED FROM oronnine.github.io/ZenderByte.. I AM ORONNINE.)
+> Made with Google AI Studio
