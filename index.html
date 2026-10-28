@@ -334,9 +334,41 @@
                     <div id="modelNameDisplay" class="mt-2 text-center p-2 bg-white/5 rounded font-mono text-sm">Loading Models...</div>
                 </div>
 
-                <div id="ollamaEndpointBox">
-                    <label class="text-xs uppercase text-gray-500 font-bold mb-1.5 block">Endpoint URL</label>
-                    <input type="text" id="ollamaUrl" value="http://localhost:11434/api/generate" class="w-full bg-black/50 border border-white/10 p-2 rounded text-xs font-mono">
+                <div id="ollamaEndpointBox" class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs uppercase text-gray-400 font-bold flex items-center gap-1.5">
+                            <span>Ollama Endpoint URL</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono">PC / Phone</span>
+                        </label>
+                        <button type="button" onclick="testCurrentOllamaConnection()" class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                            <span>Test Connection</span>
+                        </button>
+                    </div>
+                    <input type="text" id="ollamaUrl" value="http://localhost:11434/api/generate" oninput="onOllamaUrlInput(this.value)" placeholder="e.g. http://192.168.1.50:11434 or localhost:11434" class="w-full bg-black/60 border border-white/10 p-2.5 rounded-xl text-xs font-mono text-white focus:border-blue-500 outline-none transition-colors">
+
+                    <!-- Quick Host Presets for Phone & PC -->
+                    <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span class="text-[10px] text-gray-400 uppercase font-semibold">Presets:</span>
+                        <button type="button" onclick="quickSetOllamaHost('localhost')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white transition-all cursor-pointer">localhost:11434</button>
+                        <button type="button" onclick="quickSetOllamaHost('127.0.0.1')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white transition-all cursor-pointer">127.0.0.1:11434</button>
+                        <button type="button" onclick="toggleLanIpBox()" class="px-2 py-0.5 rounded bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 text-[11px] font-semibold text-blue-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer">
+                            <span>📱 Enter PC Wi-Fi IP</span>
+                        </button>
+                    </div>
+
+                    <!-- Inline Custom LAN IP Input Box -->
+                    <div id="lanIpBox" class="hidden p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 space-y-1.5">
+                        <div class="text-[11px] text-blue-200">Enter your computer's Wi-Fi / LAN IP (find it on PC via <code>ipconfig</code>):</div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="customLanIpInput" placeholder="192.168.1.100" class="flex-1 bg-black/70 border border-white/15 p-2 rounded-lg text-xs font-mono text-white outline-none focus:border-blue-400">
+                            <button type="button" onclick="applyCustomLanIp()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer">Set IP</button>
+                            <button type="button" onclick="toggleLanIpBox()" class="px-2 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg text-xs transition-all cursor-pointer">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- Connection Test Status Box -->
+                    <div id="ollamaQuickStatus" class="hidden text-xs p-2.5 rounded-xl font-mono"></div>
                 </div>
 
                 <div id="cloudModelBox" class="hidden p-3 rounded-xl bg-white/5 border border-white/10 text-xs flex items-center justify-between">
@@ -348,9 +380,36 @@
                 </div>
             </div>
 
-            <div id="ollamaHintBox" class="space-y-2">
-                <div class="text-sm text-gray-400 italic">System: Please ensure Ollama is running through the following command:</div>
-                <input type="text" id="ollamaCmd" value='set OLLAMA_ORIGINS="*" & ollama serve' class="w-full bg-black/50 border border-white/10 p-2 rounded text-xs font-mono" readonly>
+            <!-- MULTI-DEVICE SERVE ONE-LINER -->
+            <div id="ollamaHintBox" class="space-y-2 p-3 bg-white/[0.03] border border-white/10 rounded-2xl">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                    <span class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+                        <span>💻</span> Multi-Device Serve One-Liner
+                    </span>
+                    <span class="text-[10px] text-emerald-400 font-mono bg-emerald-950/40 border border-emerald-500/30 px-1.5 py-0.5 rounded">All Devices Allowed</span>
+                </div>
+                <p class="text-[11px] text-gray-400 leading-snug">
+                    Run this on your computer terminal so your <b>iPhone 7, Android, or laptop</b> can reach Ollama:
+                </p>
+
+                <!-- OS Selector Tabs -->
+                <div class="flex items-center gap-1 text-[11px] font-semibold flex-wrap">
+                    <button type="button" onclick="switchOllamaCmdTab('win-cmd')" id="tab-win-cmd" class="ollama-cmd-tab px-2.5 py-1 rounded-lg bg-blue-600 text-white font-mono text-[11px] transition-all cursor-pointer">Windows 10/11 CMD</button>
+                    <button type="button" onclick="switchOllamaCmdTab('win-ps')" id="tab-win-ps" class="ollama-cmd-tab px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 font-mono text-[11px] transition-all cursor-pointer">PowerShell</button>
+                    <button type="button" onclick="switchOllamaCmdTab('mac-linux')" id="tab-mac-linux" class="ollama-cmd-tab px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 font-mono text-[11px] transition-all cursor-pointer">Mac / Linux</button>
+                    <button type="button" onclick="switchOllamaCmdTab('tunnel')" id="tab-tunnel" class="ollama-cmd-tab px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 font-mono text-[11px] transition-all cursor-pointer">Mobile HTTPS</button>
+                </div>
+
+                <div class="relative flex items-center">
+                    <input type="text" id="ollamaCmd" value='set OLLAMA_HOST=0.0.0.0:11434 &amp;&amp; set OLLAMA_ORIGINS=* &amp;&amp; ollama serve' class="w-full bg-black/70 border border-white/10 p-2.5 pr-20 rounded-xl text-xs font-mono text-blue-200 select-all" readonly>
+                    <button type="button" onclick="copyOllamaCommand()" id="btnCopyOllamaCmd" class="absolute right-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer">
+                        Copy
+                    </button>
+                </div>
+
+                <div id="ollamaCmdNote" class="text-[10px] text-gray-400 flex items-center gap-1 font-mono">
+                    <span>💡</span> <span>Sets <code>OLLAMA_HOST=0.0.0.0:11434</code> so any device on your Wi-Fi can connect.</span>
+                </div>
             </div>
             <div class="text-xs text-blue-400/80 bg-blue-950/20 border border-blue-500/20 p-2.5 rounded-lg flex items-center gap-2">
                 <span>🌐</span>
@@ -611,7 +670,7 @@
                     <span class="font-bold text-sm text-blue-400 flex items-center gap-1.5">
                         <span>🦙</span> Ollama Port &amp; Host
                     </span>
-                    <button type="button" onclick="testOllamaConnection()" id="btnTestOllama" class="text-xs px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 transition-all">
+                    <button type="button" onclick="testCurrentOllamaConnection()" id="btnTestOllama" class="text-xs px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 transition-all font-semibold cursor-pointer">
                         Test Connection
                     </button>
                 </div>
@@ -620,18 +679,24 @@
                 <div class="space-y-1.5">
                     <label class="text-xs text-gray-400 font-semibold">Ollama Port</label>
                     <div class="flex items-center gap-2">
-                        <input type="text" id="cfg-ollama-port" value="11434" oninput="onOllamaPortChange()" placeholder="11434" class="w-28 bg-white/5 border border-white/10 p-2.5 rounded-xl text-xs font-mono">
+                        <input type="text" id="cfg-ollama-port" value="11434" oninput="onOllamaPortChange()" placeholder="11434" class="w-28 bg-white/5 border border-white/10 p-2.5 rounded-xl text-xs font-mono text-white">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <button type="button" onclick="setOllamaPortPreset('11434')" class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[11px] font-mono">11434 (Default)</button>
-                            <button type="button" onclick="setOllamaPortPreset('8080')" class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[11px] font-mono">8080</button>
+                            <button type="button" onclick="setOllamaPortPreset('11434')" class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[11px] font-mono cursor-pointer">11434 (Default)</button>
+                            <button type="button" onclick="setOllamaPortPreset('8080')" class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[11px] font-mono cursor-pointer">8080</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="text-xs text-gray-400 font-semibold">Full Endpoint URL</label>
-                    <input type="text" id="cfg-ollama-host" value="http://localhost:11434" oninput="onOllamaHostChange()" class="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl text-xs font-mono">
-                    <p class="text-[11px] text-gray-400">On mobile devices, replace <code class="text-gray-300">localhost</code> with your PC's Wi-Fi IP (e.g. <code class="text-gray-300">http://192.168.1.100:11434</code>).</p>
+                    <label class="text-xs text-gray-400 font-semibold">Full Endpoint URL / Host</label>
+                    <input type="text" id="cfg-ollama-host" value="http://localhost:11434" oninput="onOllamaHostChange()" class="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl text-xs font-mono text-white">
+                    <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                        <span class="text-[10px] text-gray-400 uppercase font-semibold">Presets:</span>
+                        <button type="button" onclick="quickSetOllamaHost('localhost')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white cursor-pointer">localhost:11434</button>
+                        <button type="button" onclick="quickSetOllamaHost('127.0.0.1')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white cursor-pointer">127.0.0.1:11434</button>
+                        <button type="button" onclick="toggleLanIpBox()" class="px-2 py-0.5 rounded bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 text-[11px] font-semibold text-blue-300 hover:text-white cursor-pointer">📱 Wi-Fi IP</button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 pt-1">On iPhone 7, Android, or other laptops, replace <code class="text-gray-300">localhost</code> with your PC's IP address (e.g. <code class="text-blue-300">http://192.168.1.100:11434</code>).</p>
                 </div>
             </div>
 
@@ -791,8 +856,8 @@
                     // Mobile notice for Ollama command hint
                     const cmdInput = document.getElementById('ollamaCmd');
                     if (cmdInput) {
-                        cmdInput.value = 'OLLAMA_HOST=0.0.0.0 OLLAMA_ORIGINS="*" ollama serve';
-                        cmdInput.title = 'Run on your PC terminal to allow phone connections, or use Ollama Cloud models!';
+                        cmdInput.value = 'set OLLAMA_HOST=0.0.0.0:11434 && set OLLAMA_ORIGINS=* && ollama serve';
+                        cmdInput.title = 'Run on your PC terminal (Windows 10/11) to allow phone connections!';
                     }
                 } else {
                     document.documentElement.classList.add('is-desktop');
@@ -1108,33 +1173,255 @@
             loadModels();
         }
 
-        async function testOllamaConnection() {
-            const statusBox = document.getElementById('ollamaTestStatus');
-            const btn = document.getElementById('btnTestOllama');
-            const host = (document.getElementById('cfg-ollama-host')?.value || 'http://localhost:11434').trim().replace(/\/+$/, '');
-
-            if (btn) btn.disabled = true;
-            if (statusBox) {
-                statusBox.className = 'text-xs p-2.5 rounded-lg font-mono bg-blue-950/40 text-blue-300 border border-blue-500/30 flex items-center gap-2';
-                statusBox.innerHTML = '<span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span> Connecting to ' + escapeHtml(host) + '...';
-                statusBox.classList.remove('hidden');
+        // ==========================================
+        // OLLAMA MULTI-DEVICE & ENDPOINT ENGINE
+        // ==========================================
+        function parseOllamaEndpoint(rawInput) {
+            if (!rawInput || !rawInput.trim()) {
+                return {
+                    host: 'http://localhost:11434',
+                    generateUrl: 'http://localhost:11434/api/generate',
+                    tagsUrl: 'http://localhost:11434/api/tags',
+                    port: '11434'
+                };
             }
 
+            let trimmed = rawInput.trim();
+            // Remove /api/generate or /api/tags or trailing slashes
+            trimmed = trimmed.replace(/\/api\/(?:generate|tags|chat)\/?$/i, '').replace(/\/+$/, '');
+
+            // Ensure protocol
+            if (!/^https?:\/\//i.test(trimmed)) {
+                trimmed = 'http://' + trimmed;
+            }
+
+            let port = '11434';
             try {
-                const res = await fetch(`${host}/api/tags`);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const models = data.models || [];
-                statusBox.className = 'text-xs p-2.5 rounded-lg font-mono bg-emerald-950/40 text-emerald-300 border border-emerald-500/30';
-                statusBox.innerHTML = `✓ Online! Found ${models.length} model(s): ` + (models.map(m => m.name).slice(0, 3).join(', ') || 'none');
+                const u = new URL(trimmed);
+                if (u.port) {
+                    port = u.port;
+                } else if (u.protocol === 'http:' && !u.port) {
+                    const parts = u.host.split(':');
+                    if (parts.length === 1) {
+                        trimmed = `${u.protocol}//${u.host}:11434`;
+                        port = '11434';
+                    }
+                }
+            } catch (e) {
+                // Keep trimmed as is
+            }
+
+            const cleanHost = trimmed.replace(/\/+$/, '');
+            return {
+                host: cleanHost,
+                generateUrl: `${cleanHost}/api/generate`,
+                tagsUrl: `${cleanHost}/api/tags`,
+                port: port
+            };
+        }
+
+        let ollamaInputDebounce = null;
+        function onOllamaUrlInput(val) {
+            const parsed = parseOllamaEndpoint(val);
+            const s = AISettings.get();
+            s.ollamaHost = parsed.host;
+            s.ollamaPort = parsed.port;
+            AISettings.save(s);
+
+            const cfgHost = document.getElementById('cfg-ollama-host');
+            if (cfgHost && cfgHost.value !== parsed.host) {
+                cfgHost.value = parsed.host;
+            }
+            const cfgPort = document.getElementById('cfg-ollama-port');
+            if (cfgPort && cfgPort.value !== parsed.port) {
+                cfgPort.value = parsed.port;
+            }
+
+            clearTimeout(ollamaInputDebounce);
+            ollamaInputDebounce = setTimeout(() => {
                 loadModels();
-            } catch (err) {
-                statusBox.className = 'text-xs p-2.5 rounded-lg font-mono bg-red-950/40 text-red-300 border border-red-500/30 space-y-1';
-                statusBox.innerHTML = `<div>❌ Cannot reach ${escapeHtml(host)}</div><div class="text-[11px] text-gray-400">Run: <code>set OLLAMA_ORIGINS="*" & ollama serve</code></div>`;
-            } finally {
-                if (btn) btn.disabled = false;
+            }, 600);
+        }
+
+        function quickSetOllamaHost(type) {
+            let target = 'http://localhost:11434';
+            if (type === '127.0.0.1') target = 'http://127.0.0.1:11434';
+            else if (type === 'localhost') target = 'http://localhost:11434';
+
+            const urlInput = document.getElementById('ollamaUrl');
+            if (urlInput) urlInput.value = `${target}/api/generate`;
+            const cfgHost = document.getElementById('cfg-ollama-host');
+            if (cfgHost) cfgHost.value = target;
+
+            onOllamaUrlInput(target);
+            testCurrentOllamaConnection(target);
+        }
+
+        function toggleLanIpBox() {
+            const box = document.getElementById('lanIpBox');
+            if (box) {
+                box.classList.toggle('hidden');
+                if (!box.classList.contains('hidden')) {
+                    const input = document.getElementById('customLanIpInput');
+                    if (input) input.focus();
+                }
             }
         }
+
+        function applyCustomLanIp() {
+            const input = document.getElementById('customLanIpInput');
+            const val = (input?.value || '').trim();
+            if (!val) return;
+            const parsed = parseOllamaEndpoint(val);
+            const urlInput = document.getElementById('ollamaUrl');
+            if (urlInput) urlInput.value = parsed.generateUrl;
+            const cfgHost = document.getElementById('cfg-ollama-host');
+            if (cfgHost) cfgHost.value = parsed.host;
+
+            onOllamaUrlInput(parsed.host);
+            testCurrentOllamaConnection(parsed.host);
+            toggleLanIpBox();
+        }
+
+        // MULTI-DEVICE SERVE ONE-LINER TABS & COPY
+        const OLLAMA_SERVE_COMMANDS = {
+            'win-cmd': {
+                cmd: 'set OLLAMA_HOST=0.0.0.0:11434 && set OLLAMA_ORIGINS=* && ollama serve',
+                note: 'Runs in Windows Command Prompt (cmd.exe). Listens on all interfaces so your phone or laptop can connect.'
+            },
+            'win-ps': {
+                cmd: '$env:OLLAMA_HOST="0.0.0.0:11434"; $env:OLLAMA_ORIGINS="*"; ollama serve',
+                note: 'Runs in Windows PowerShell. Sets environment variables and launches Ollama.'
+            },
+            'mac-linux': {
+                cmd: 'OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS="*" ollama serve',
+                note: 'Runs in macOS Terminal or Linux/WSL. Accessible by any device on your Wi-Fi.'
+            },
+            'tunnel': {
+                cmd: 'npx localtunnel --port 11434',
+                note: 'Creates an HTTPS tunnel (e.g. https://xxx.loca.lt) to bypass mobile Safari mixed-content blocks!'
+            }
+        };
+
+        function switchOllamaCmdTab(tabKey) {
+            document.querySelectorAll('.ollama-cmd-tab').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-white/5', 'text-gray-400');
+            });
+            const activeBtn = document.getElementById(`tab-${tabKey}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+                activeBtn.classList.remove('bg-white/5', 'text-gray-400');
+            }
+
+            const data = OLLAMA_SERVE_COMMANDS[tabKey] || OLLAMA_SERVE_COMMANDS['win-cmd'];
+            const cmdInput = document.getElementById('ollamaCmd');
+            if (cmdInput) cmdInput.value = data.cmd;
+            const noteEl = document.getElementById('ollamaCmdNote');
+            if (noteEl) noteEl.innerHTML = `<span>💡</span> <span>${escapeHtml(data.note)}</span>`;
+        }
+
+        function copyOllamaCommand() {
+            const cmdInput = document.getElementById('ollamaCmd');
+            if (!cmdInput) return;
+            const text = cmdInput.value;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btnCopyOllamaCmd');
+                if (btn) {
+                    const original = btn.textContent;
+                    btn.textContent = '✓ Copied!';
+                    btn.classList.add('bg-emerald-600');
+                    btn.classList.remove('bg-blue-600');
+                    setTimeout(() => {
+                        btn.textContent = original;
+                        btn.classList.remove('bg-emerald-600');
+                        btn.classList.add('bg-blue-600');
+                    }, 2000);
+                }
+                showAppToast("Ollama serve command copied to clipboard!", "success");
+            }).catch(() => {
+                cmdInput.select();
+                document.execCommand('copy');
+                showAppToast("Command copied!", "success");
+            });
+        }
+
+        async function testCurrentOllamaConnection(hostOverride = null) {
+            const rawVal = hostOverride || document.getElementById('ollamaUrl')?.value || document.getElementById('cfg-ollama-host')?.value || 'http://localhost:11434';
+            const parsed = parseOllamaEndpoint(rawVal);
+            const host = parsed.host;
+
+            const quickStatus = document.getElementById('ollamaQuickStatus');
+            const settingsStatus = document.getElementById('ollamaTestStatus');
+            const testBtn = document.getElementById('btnTestOllama');
+            if (testBtn) testBtn.disabled = true;
+
+            const setStatusHtml = (html, isError = false, isSuccess = false) => {
+                [quickStatus, settingsStatus].forEach(el => {
+                    if (!el) return;
+                    el.classList.remove('hidden');
+                    let colorClasses = 'bg-blue-950/40 text-blue-300 border-blue-500/30';
+                    if (isError) colorClasses = 'bg-red-950/50 text-red-200 border-red-500/40';
+                    if (isSuccess) colorClasses = 'bg-emerald-950/50 text-emerald-200 border-emerald-500/40';
+                    el.className = `text-xs p-2.5 rounded-xl font-mono border ${colorClasses} space-y-1 transition-all`;
+                    el.innerHTML = html;
+                });
+            };
+
+            setStatusHtml(`<span class="w-2 h-2 rounded-full bg-blue-400 animate-ping inline-block mr-1"></span> Connecting to ${escapeHtml(host)}...`);
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch(parsed.tagsUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                const data = await res.json();
+                const models = Array.isArray(data?.models) ? data.models : [];
+
+                setStatusHtml(`
+                    <div class="flex items-center gap-1.5 font-bold text-emerald-400">
+                        <span>✓ Connected to Ollama!</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">${models.length} model(s) found</span>
+                    </div>
+                    <div class="text-[11px] text-gray-300">Host: <code class="text-white">${escapeHtml(host)}</code></div>
+                    ${models.length > 0 ? `<div class="text-[10px] text-emerald-300/80 truncate">Models: ${escapeHtml(models.map(m => m.name).slice(0, 4).join(', '))}${models.length > 4 ? '...' : ''}</div>` : ''}
+                `, false, true);
+
+                loadModels();
+            } catch (err) {
+                console.warn("Ollama connection test failed:", err);
+                const isMobile = MobileDetector.isMobile();
+                const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+                let guidance = '';
+                if (isMobile && isLocal) {
+                    guidance = `
+                        <div class="text-amber-300 font-bold mt-1 text-[11px]">📱 Notice: Mobile device detected (iPhone/Android)!</div>
+                        <div class="text-[11px] text-gray-300 leading-snug">"localhost" points to your phone. To connect to your computer, enter your PC's Wi-Fi IP (e.g. <code>http://192.168.1.X:11434</code>) above.</div>
+                    `;
+                } else {
+                    guidance = `
+                        <div class="text-[11px] text-gray-300 mt-1">Make sure Ollama is running on your computer with multi-device access enabled:</div>
+                        <code class="block text-[10px] p-1.5 bg-black/60 rounded text-blue-200 mt-1 select-all font-mono">set OLLAMA_HOST=0.0.0.0:11434 &amp;&amp; set OLLAMA_ORIGINS=* &amp;&amp; ollama serve</code>
+                    `;
+                }
+
+                setStatusHtml(`
+                    <div class="font-bold text-red-300 flex items-center gap-1.5">
+                        <span>❌ Cannot reach ${escapeHtml(host)}</span>
+                    </div>
+                    <div class="text-[10px] text-gray-400">Error: ${escapeHtml(err.message || 'Connection refused / CORS blocked')}</div>
+                    ${guidance}
+                `, true, false);
+            } finally {
+                if (testBtn) testBtn.disabled = false;
+            }
+        }
+
+        const testOllamaConnection = testCurrentOllamaConnection;
+
 
         // Initialize AI Settings on load
         AISettings.applyToUI();
@@ -1370,13 +1657,14 @@
             let localModelsList = [];
             let isLocalConnected = false;
             const s = AISettings.get();
-            const host = (s.ollamaHost || 'http://localhost:11434').trim().replace(/\/+$/, '');
+            const rawHost = document.getElementById('ollamaUrl')?.value || s.ollamaHost || 'http://localhost:11434';
+            const parsed = parseOllamaEndpoint(rawHost);
 
             try {
                 // Fetch local models if Ollama is running with timeout to avoid hanging
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const res = await fetch(`${host}/api/tags`, { signal: controller.signal });
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(parsed.tagsUrl, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (res.ok) {
                     const data = await res.json();
@@ -1732,27 +2020,39 @@
                 return data.choices?.[0]?.message?.content || '';
 
             } else {
-                // Ollama (Local)
-                const host = (settings.ollamaHost || 'http://localhost:11434').replace(/\/+$/, '');
-                const endpoint = (document.getElementById('ollamaUrl')?.value || `${host}/api/generate`).trim();
+                // Ollama (Local & Remote LAN)
+                const hostVal = document.getElementById('ollamaUrl')?.value || settings.ollamaHost || 'http://localhost:11434';
+                const parsed = parseOllamaEndpoint(hostVal);
                 const sliderVal = parseInt(document.getElementById('modelSlider')?.value || '0', 10);
                 const selectedModelObj = (allModels && allModels.length > sliderVal) ? allModels[sliderVal] : (allModels?.[0] || null);
                 const model = selectedModelObj?.name || 'llama3';
 
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: model,
-                        prompt: `${systemPrompt}\nUser: ${userText}`,
-                        stream: false
-                    })
-                });
-                if (!res.ok) {
-                    throw new Error(`Ollama HTTP ${res.status}: ${res.statusText}`);
+                try {
+                    const res = await fetch(parsed.generateUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: model,
+                            prompt: `${systemPrompt}\nUser: ${userText}`,
+                            stream: false
+                        })
+                    });
+                    if (!res.ok) {
+                        throw new Error(`Ollama HTTP ${res.status}: ${res.statusText}`);
+                    }
+                    const data = await res.json();
+                    return data.response || '';
+                } catch (fetchErr) {
+                    const isMobile = MobileDetector.isMobile();
+                    const isLocal = parsed.host.includes('localhost') || parsed.host.includes('127.0.0.1');
+                    let hint = `Could not connect to Ollama at ${parsed.host}.`;
+                    if (isMobile && isLocal) {
+                        hint += ` On your phone (iPhone 7/Android), "localhost" refers to the phone itself. Please set the Endpoint URL to your computer's IP (e.g. http://192.168.1.X:11434).`;
+                    } else {
+                        hint += ` Make sure Ollama is running on your computer with multi-device access enabled: set OLLAMA_HOST=0.0.0.0:11434 && set OLLAMA_ORIGINS=* && ollama serve`;
+                    }
+                    throw new Error(hint);
                 }
-                const data = await res.json();
-                return data.response || '';
             }
         }
 
